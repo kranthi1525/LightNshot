@@ -1,34 +1,17 @@
-// Mobile menu toggle functionality
-function toggleMobileMenu() {
-    const toggle = document.querySelector('.mobile-menu-toggle');
-    const navLinks = document.getElementById('navLinks');
-    
-    toggle.classList.toggle('active');
-    navLinks.classList.toggle('active');
-}
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        const toggle = document.querySelector('.mobile-menu-toggle');
-        const navLinks = document.getElementById('navLinks');
-        
-        toggle.classList.remove('active');
-        navLinks.classList.remove('active');
+// Navbar load animation
+    window.addEventListener("load", () => {
+      const navbar = document.getElementById("navbar");
+      navbar.classList.add("show");
     });
-});
 
-// Close mobile menu when clicking outside
-document.addEventListener('click', (e) => {
-    const toggle = document.querySelector('.mobile-menu-toggle');
-    const navLinks = document.getElementById('navLinks');
-    const nav = document.querySelector('nav');
-    
-    if (!nav.contains(e.target) && navLinks.classList.contains('active')) {
-        toggle.classList.remove('active');
-        navLinks.classList.remove('active');
-    }
-});
+    // Mobile Menu Toggle
+    const hamburger = document.getElementById("hamburger");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    hamburger.addEventListener("click", () => {
+      hamburger.classList.toggle("active");
+      mobileMenu.classList.toggle("show");
+    });
 
 
 /*--------------------
@@ -137,3 +120,174 @@ document.addEventListener('mouseup', handleMouseUp)
 document.addEventListener('touchstart', handleMouseDown)
 document.addEventListener('touchmove', handleMouseMove)
 document.addEventListener('touchend', handleMouseUp)
+
+
+
+//carosule team logic
+
+ const teamMembers = [
+	{ name: "Luffy", role: "Founder" },
+	{ name: "Monkey D. Luffy", role: "Creative Director" },
+	{ name: "Luffy chan", role: "Lead Developer" },
+	{ name: "Lucy", role: "UX Designer" },
+	{ name: "Luffy kun", role: "Marketing Manager" },
+	{ name: "Monkey chan", role: "Product Manager" }
+];
+
+const cards = document.querySelectorAll(".card");
+const dots = document.querySelectorAll(".dot");
+const memberName = document.querySelector(".member-name");
+const memberRole = document.querySelector(".member-role");
+const upArrows = document.querySelectorAll(".nav-arrow.up");
+const downArrows = document.querySelectorAll(".nav-arrow.down");
+let currentIndex = 0;
+let isAnimating = false;
+
+function updateCarousel(newIndex) {
+	if (isAnimating) return;
+	isAnimating = true;
+
+	currentIndex = (newIndex + cards.length) % cards.length;
+
+	cards.forEach((card, i) => {
+		const offset = (i - currentIndex + cards.length) % cards.length;
+
+		card.classList.remove(
+			"center",
+			"up-1",
+			"up-2",
+			"down-1",
+			"down-2",
+			"hidden"
+		);
+
+		if (offset === 0) {
+			card.classList.add("center");
+		} else if (offset === 1) {
+			card.classList.add("down-1");
+		} else if (offset === 2) {
+			card.classList.add("down-2");
+		} else if (offset === cards.length - 1) {
+			card.classList.add("up-1");
+		} else if (offset === cards.length - 2) {
+			card.classList.add("up-2");
+		} else {
+			card.classList.add("hidden");
+		}
+	});
+
+	dots.forEach((dot, i) => {
+		dot.classList.toggle("active", i === currentIndex);
+	});
+
+	memberName.style.opacity = "0";
+	memberRole.style.opacity = "0";
+
+	setTimeout(() => {
+		memberName.textContent = teamMembers[currentIndex].name;
+		memberRole.textContent = teamMembers[currentIndex].role;
+		memberName.style.opacity = "1";
+		memberRole.style.opacity = "1";
+	}, 300);
+
+	setTimeout(() => {
+		isAnimating = false;
+	}, 800);
+}
+
+upArrows.forEach(arrow => {
+	arrow.addEventListener("click", () => {
+		updateCarousel(currentIndex - 1);
+	});
+});
+
+downArrows.forEach(arrow => {
+	arrow.addEventListener("click", () => {
+		updateCarousel(currentIndex + 1);
+	});
+});
+
+dots.forEach((dot, i) => {
+	dot.addEventListener("click", () => {
+		updateCarousel(i);
+	});
+});
+
+cards.forEach((card, i) => {
+	card.addEventListener("click", () => {
+		updateCarousel(i);
+	});
+});
+
+document.addEventListener("keydown", (e) => {
+	if (e.key === "ArrowUp") {
+		updateCarousel(currentIndex - 1);
+	} else if (e.key === "ArrowDown") {
+		updateCarousel(currentIndex + 1);
+	}
+});
+
+let touchStartY = 0;
+let touchEndY = 0;
+
+document.addEventListener("touchstart", (e) => {
+	touchStartY = e.changedTouches[0].screenY;
+	stopAutoRotate();
+});
+
+document.addEventListener("touchend", (e) => {
+	touchEndY = e.changedTouches[0].screenY;
+	handleSwipe();
+	startAutoRotate();
+});
+
+function handleSwipe() {
+	const swipeThreshold = 50;
+	const diff = touchStartY - touchEndY;
+	if (Math.abs(diff) > swipeThreshold) {
+		if (diff > 0) updateCarousel(currentIndex + 1);
+		else updateCarousel(currentIndex - 1);
+	}
+}
+
+// Auto-rotate logic
+let autoRotateInterval = null;
+const AUTO_ROTATE_DELAY = 2000; // 4 seconds
+
+function startAutoRotate() {
+	stopAutoRotate();
+	autoRotateInterval = setInterval(() => {
+		updateCarousel(currentIndex + 1);
+	}, AUTO_ROTATE_DELAY);
+}
+
+function stopAutoRotate() {
+	if (autoRotateInterval) {
+		clearInterval(autoRotateInterval);
+		autoRotateInterval = null;
+	}
+}
+
+function resetAutoRotate() {
+	stopAutoRotate();
+	startAutoRotate();
+}
+
+// Pause on hover and resume on leave
+const carouselContainerEl = document.querySelector('.carousel-container');
+if (carouselContainerEl) {
+	carouselContainerEl.addEventListener('mouseenter', stopAutoRotate);
+	carouselContainerEl.addEventListener('mouseleave', startAutoRotate);
+}
+
+// Reset timer on user interactions
+dots.forEach(d => d.addEventListener('click', resetAutoRotate));
+cards.forEach(c => c.addEventListener('click', resetAutoRotate));
+upArrows.forEach(a => a.addEventListener('click', resetAutoRotate));
+downArrows.forEach(a => a.addEventListener('click', resetAutoRotate));
+document.addEventListener('keydown', resetAutoRotate);
+
+updateCarousel(0);
+startAutoRotate();
+
+
